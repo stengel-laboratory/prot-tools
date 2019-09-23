@@ -2,7 +2,6 @@
 
 import pandas as pd 
 import argparse
-import os
 
 desc = """Kai Kammer - 2019-09. 
 Script to convert merge jwalk output with xquest output. 
