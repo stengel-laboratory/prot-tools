@@ -1,0 +1,2 @@
+include versioneer.py
+include prot_tools/_version.py
