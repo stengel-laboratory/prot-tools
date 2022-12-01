@@ -16,6 +16,8 @@ parser.add_argument('input', action="store", default=None, type=str, nargs='+',
                          "id) files (at least one of each required)")
 parser.add_argument('-off', '--offsets_file', action="store", required=True,
                     help="File containing fasta-pdb offsets (required!)")
+parser.add_argument('-nco', '--no_calc_offsets', action="store_true", default=False,
+                    help="Do not include offsets into output")
 parser.add_argument('-f', '--format', action="store", dest="format", default="unspecific",
                     help="Output format. xquest creates uxid compatible with xquest output. "
                          "Possible values: unspecific (default), xquest")
@@ -41,7 +43,7 @@ def merge_uni_with_jwalk(df_uni, df_jwalk):
     df = pd.merge(df, df_uni, right_on=[prot_lib.COL_PDB_FILE, prot_lib.COL_PDB_CHAIN_ID],
                   left_on=['Model', prot_lib.COL_CHAIN_2], how='inner',
                   suffixes=('1', '2'))
-    if 'Offset' in df_uni:
+    if 'Offset' in df_uni and not args.no_calc_offsets:
         df['Offset1'] = df['Offset1'].astype(int)
         df[prot_lib.COL_POS_1] += df['Offset1']
         df[prot_lib.COL_POS_2] += df['Offset2']
@@ -52,11 +54,11 @@ def merge_uni_with_jwalk(df_uni, df_jwalk):
 
 
 def get_uxid_df(df):
-    df[prot_lib.COL_UXID] = df[prot_lib.COL_UNIPROT_ID_1] + ':' + df[prot_lib.COL_POS_1].astype(str) + ':x:' + df[
-        prot_lib.COL_UNIPROT_ID_2] + ':' + df[
+    df[prot_lib.COL_UXID] = df[prot_lib.COL_UNIPROT_ID_FULL_1] + ':' + df[prot_lib.COL_POS_1].astype(str) + ':x:' + df[
+        prot_lib.COL_UNIPROT_ID_FULL_2] + ':' + df[
                                 prot_lib.COL_POS_2].astype(str)
-    df[prot_lib.COL_UXID_INV] = df[prot_lib.COL_UNIPROT_ID_2] + ':' + df[prot_lib.COL_POS_2].astype(str) + ':x:' + df[
-        prot_lib.COL_UNIPROT_ID_1] + ':' + df[
+    df[prot_lib.COL_UXID_INV] = df[prot_lib.COL_UNIPROT_ID_FULL_2] + ':' + df[prot_lib.COL_POS_2].astype(str) + ':x:' + df[
+        prot_lib.COL_UNIPROT_ID_FULL_1] + ':' + df[
                                     prot_lib.COL_POS_1].astype(str)
     return df
 
@@ -84,7 +86,8 @@ def main():
                                                                       prot_lib.COL_POS_2, prot_lib.COL_AMINO_ACID_1,
                                                                       prot_lib.COL_AMINO_ACID_2, prot_lib.COL_CHAIN_1,
                                                                       prot_lib.COL_CHAIN_2, prot_lib.COL_UNIPROT_ID_1,
-                                                                      prot_lib.COL_UNIPROT_ID_2]])
+                                                                      prot_lib.COL_UNIPROT_ID_2, prot_lib.COL_UNIPROT_ID_FULL_1,
+                                                                      prot_lib.COL_UNIPROT_ID_FULL_2]])
     df = df.drop(columns=['Index', 'Atom1', 'Atom2'], errors='ignore')
     df = df.rename(columns={'Model': prot_lib.COL_PDB_FILE})
     df.to_csv(args.outname, index=False)
