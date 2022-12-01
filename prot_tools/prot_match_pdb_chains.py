@@ -44,22 +44,6 @@ def get_uni_ids(fasta_file_list):
     return uni_dict, file_to_uni_id_dict
 
 
-def get_pdb_chains(pdb_file_list):
-    pdb_dict = {}
-    uni_id_to_file_dict = {}
-    for pdb_file in pdb_file_list:
-        chain_id_to_uni_dict = {}
-        # converting SeqIO records from generator to list; otherwise would be empty after assert statement
-        pdb_records = list(SeqIO.parse(pdb_file, "pdb-seqres"))
-        assert list(pdb_records), f"No seqres information found in {pdb_file}. Exiting"
-        for seq in pdb_records:
-            uni_id = seq.dbxrefs[0].split(':')[1]
-            chain_id_to_uni_dict[seq.id.split(':')[1]] = uni_id
-            uni_id_to_file_dict[uni_id] = pdb_file
-        pdb_dict[pdb_file] = chain_id_to_uni_dict
-    return pdb_dict, uni_id_to_file_dict
-
-
 def get_merge_df(uni_dict, pdb_dict, offset_dict=None):
     df_uni_list = []
     df_pdb_list = []
@@ -158,7 +142,7 @@ def main():
     assert pdb_file_list or not fasta_file_list, "Either no fasta or pdb file found in input; the script needs at " \
                                                  "least one of each "
     uni_dict, fasta_file_to_uni_id = get_uni_ids(fasta_file_list)
-    pdb_dict, uni_id_to_file_pdb = get_pdb_chains(pdb_file_list)
+    pdb_dict, uni_id_to_file_pdb = prot_lib.get_pdb_chains(pdb_file_list)
     offset_dict = None
     if not args.no_compute_offsets:
         offset_dict = get_offsets(fasta_file_to_uni_id, uni_id_to_file_pdb)

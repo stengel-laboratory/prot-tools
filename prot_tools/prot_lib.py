@@ -13,15 +13,17 @@ COL_AMINO_ACID_1 = 'AminoAcid1'
 COL_AMINO_ACID_2 = 'AminoAcid2'
 COL_CHAIN_1 = 'Chain1'
 COL_CHAIN_2 = 'Chain2'
-COL_UNIPROT_ID_1 = 'UniprotID_Full1'
-COL_UNIPROT_ID_2 = 'UniprotID_Full2'
+COL_UNIPROT_ID = "UniprotID"
+COL_UNIPROT_ID_1 = COL_UNIPROT_ID + '1'
+COL_UNIPROT_ID_2 = COL_UNIPROT_ID + '2'
+COL_UNIPROT_ID_FULL = COL_UNIPROT_ID + "_Full"
+COL_UNIPROT_ID_FULL_1 = COL_UNIPROT_ID_FULL + "1"
+COL_UNIPROT_ID_FULL_2 = COL_UNIPROT_ID_FULL + "2"
 COL_RES = 'Res'
 COL_ASA = 'ASA'
 COL_SASA = 'SASA'
 COL_PKA = 'pKa'
 COL_SEC_STRUC = 'SecondaryStructure'
-COL_UNIPROT_ID = "UniprotID"
-COL_UNIPROT_ID_FULL = COL_UNIPROT_ID + "_Full"
 COL_DIST_EU = "eucDist"
 COL_UXID = "uxID"
 COL_UXID_INV = COL_UXID + "_inv"
@@ -121,3 +123,31 @@ def get_prot_lys_pos_dict(fasta_records):
     for record in fasta_records:
         prot_pos_dict[record.id] = [n + 1 for n, c in enumerate(record.seq) if c == 'K']
     return prot_pos_dict
+
+def get_prot_lys_pos_dict_pdb(pdb_file):
+    prot_pos_dict = {}
+    chain_id_to_uni_dict = {}
+    # converting SeqIO records from generator to list; otherwise would be empty after assert statement
+    pdb_records = list(SeqIO.parse(pdb_file, "pdb-seqres"))
+    assert list(pdb_records), f"No seqres information found in {pdb_file}. Exiting"
+    for record in pdb_records:
+        uni_id = record.dbxrefs[0].split(':')[1]
+        chain_id = record.id.split(':')[1]
+        chain_id_to_uni_dict[chain_id] = uni_id
+        prot_pos_dict[chain_id] = [n for n, c in enumerate(record.seq) if c == 'K']
+    return chain_id_to_uni_dict, prot_pos_dict
+
+def get_pdb_chains(pdb_file_list):
+    pdb_dict = {}
+    uni_id_to_file_dict = {}
+    for pdb_file in pdb_file_list:
+        chain_id_to_uni_dict = {}
+        # converting SeqIO records from generator to list; otherwise would be empty after assert statement
+        pdb_records = list(SeqIO.parse(pdb_file, "pdb-seqres"))
+        assert list(pdb_records), f"No seqres information found in {pdb_file}. Exiting"
+        for record in pdb_records:
+            uni_id = record.dbxrefs[0].split(':')[1]
+            chain_id_to_uni_dict[record.id.split(':')[1]] = uni_id
+            uni_id_to_file_dict[uni_id] = pdb_file
+        pdb_dict[pdb_file] = chain_id_to_uni_dict
+    return pdb_dict, uni_id_to_file_dict
