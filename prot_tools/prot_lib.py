@@ -1,5 +1,5 @@
 from Bio.PDB import PDBParser
-from Bio import SeqIO
+from Bio import SeqIO, SeqUtils
 import pandas as pd
 
 COL_FASTA_FILE = "FastaFile"
@@ -151,3 +151,11 @@ def get_pdb_chains(pdb_file_list):
             uni_id_to_file_dict[uni_id] = pdb_file
         pdb_dict[pdb_file] = chain_id_to_uni_dict
     return pdb_dict, uni_id_to_file_dict
+
+
+def get_pdb_mol_weight(pdb_file):
+    mw = 0
+    pdb_records = list(SeqIO.parse(pdb_file, "pdb-seqres"))
+    for record in pdb_records:
+        mw += SeqUtils.molecular_weight(record.seq, seq_type="protein")
+    return mw
