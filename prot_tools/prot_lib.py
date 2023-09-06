@@ -128,7 +128,11 @@ def get_prot_lys_pos_dict_pdb(pdb_file):
     prot_pos_dict = {}
     chain_id_to_uni_dict = {}
     # converting SeqIO records from generator to list; otherwise would be empty after assert statement
-    pdb_records = list(SeqIO.parse(pdb_file, "pdb-seqres"))
+    if ".cif" in pdb_file:
+        parse_string = "cif-seqres"
+    else:
+        parse_string = "pdb-seqres"
+    pdb_records = list(SeqIO.parse(pdb_file, parse_string))
     assert list(pdb_records), f"No seqres information found in {pdb_file}. Exiting"
     for record in pdb_records:
         uni_id = record.dbxrefs[0].split(':')[1]
@@ -141,9 +145,14 @@ def get_pdb_chains(pdb_file_list):
     pdb_dict = {}
     uni_id_to_file_dict = {}
     for pdb_file in pdb_file_list:
+        if ".cif" in pdb_file:
+            parse_string = "cif-seqres"
+        else:
+            parse_string = "pdb-seqres"
+
         chain_id_to_uni_dict = {}
         # converting SeqIO records from generator to list; otherwise would be empty after assert statement
-        pdb_records = list(SeqIO.parse(pdb_file, "pdb-seqres"))
+        pdb_records = list(SeqIO.parse(pdb_file, parse_string))
         assert list(pdb_records), f"No seqres information found in {pdb_file}. Exiting"
         for record in pdb_records:
             uni_id = record.dbxrefs[0].split(':')[1]
@@ -155,7 +164,13 @@ def get_pdb_chains(pdb_file_list):
 
 def get_pdb_mol_weight(pdb_file):
     mw = 0
-    pdb_records = list(SeqIO.parse(pdb_file, "pdb-seqres"))
+    if ".cif" in pdb_file:
+        parse_string = "cif-seqres"
+    else:
+        parse_string = "pdb-seqres"
+    pdb_records = list(SeqIO.parse(pdb_file, parse_string))
     for record in pdb_records:
-        mw += SeqUtils.molecular_weight(record.seq, seq_type="protein")
+        seq = record.seq
+        seq = seq.replace("X", "V") # replace X (any aa) with valine which is close to average weight; otherwise this will not work
+        mw += SeqUtils.molecular_weight(seq, seq_type="protein")
     return mw
