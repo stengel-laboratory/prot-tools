@@ -1,6 +1,7 @@
 # PROT TOOLS
-## A collection of tools to map crosslinks with jwalk
-### 2019-09 Kai Kammer
+## Create input for kinetic crosslinks simulations
+### 2023-09 Kai-Michael Kammer
+Set of python scripts to prepare input for kinetic crosslink simulations (https://github.com/stengel-laboratory/xlink-kme-sbml). 
 
 ## Installation
 ### Versions
@@ -32,26 +33,15 @@ It is recommended to install all required packages into their own separate envir
 
 ## Usage
 
-### Fasta PDB Mapping
-First map your protein's fasta file to its pdb file with
-
-    prot_match_pdb_chains.py
-
-For example:
-
-    prot_match_pdb_chains.py my_prot.pdb my_prot.fasta
-
-Multiple fasta and pdb files are possible which are validated via biopyton. Note that offsets between pdb and fasta are computed automatically on a per-chain basis. The above command will create a file called prot_uni_to_pdb_chain.csv.
-
-### pKa Calculation
+### pKa
 pKa values are calculated with pKAI (https://github.com/bayer-science-for-a-better-life/pKAI). 
 The script
 
     prot_get_pka.py
 
-is a small wrapper for pKAI to create output compatible with the following steps. It also support the offsets file created in the previous step:
+is a small wrapper for pKAI to create output containing amino acid residues pKa values:
 
-    prot_get_pka.py my_prot.pdb -off prot_uni_to_pdb_chain.csv
+    prot_get_pka.py my_prot.pdb
 
 This will create a file call prot_pka.csv.
 
@@ -61,9 +51,9 @@ The script named
 
     prot_get_sasa.py
 
-formats the output into a form compatible with the following steps. It also support the offsets file created in the previous step:
+calls that module & formats the output:
 
-    prot_get_sasa.py my_prot.pdb -off prot_uni_to_pdb_chain.csv
+    prot_get_sasa.py my_prot.pdb
 
 This will create a file call prot_sasa.csv.
 
@@ -84,21 +74,21 @@ Jwalk can then be used like this:
 
 where max_dist limits the euclidean maximum distance between two amino acids (which is always shorter than the SASD).  
 Jwalk will create a Jwalk_results folder. The file we need will be called my_prot_crosslink_list.txt.  
-The output written to that file then formatted and accorded for fasta/pdb offsets with
+The output written to that file then formatted with
 
     prot_jwalk_format_output.py
 
 For example
 
-    prot_jwalk_format_output.py Jwalk_results/my_prot_crosslink_list.txt -off prot_uni_to_pdb_chain.csv
+    prot_jwalk_format_output.py Jwalk_results/my_prot_crosslink_list.txt
 
 will write to a file called prot_distances.csv
 
 ## Summary
-After the steps above you should end up with 3 files:
+After the steps above one should end up with 3 files:
 
 * prot_pka.csv
 * prot_sasa.csv
 * prot_distances.csv
 
-These files are ready to use as input for creating a kinetic model (via xy.py)
+These files are ready to use as input for creating a kinetic model.
