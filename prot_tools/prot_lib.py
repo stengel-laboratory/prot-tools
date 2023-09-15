@@ -1,3 +1,8 @@
+import os
+import sys
+from Bio.PDB.SASA import ShrakeRupley
+from pKAI.pKAI import pKAI
+
 from Bio.PDB import PDBParser
 from Bio import SeqIO, SeqUtils
 import pandas as pd
@@ -141,6 +146,7 @@ def get_prot_lys_pos_dict_pdb(pdb_file):
         prot_pos_dict[chain_id] = [n for n, c in enumerate(record.seq) if c == 'K']
     return chain_id_to_uni_dict, prot_pos_dict
 
+
 def get_pdb_chains(pdb_file_list):
     pdb_dict = {}
     uni_id_to_file_dict = {}
@@ -174,3 +180,43 @@ def get_pdb_mol_weight(pdb_file):
         seq = seq.replace("X", "V") # replace X (any aa) with valine which is close to average weight; otherwise this will not work
         mw += SeqUtils.molecular_weight(seq, seq_type="protein")
     return mw
+
+
+def get_pka_df(pdb_file, df_offsets=None) -> "pd.DataFrame":
+    base_name = os.path.basename(pdb_file)
+    sys.stdout = open(os.devnull, 'w')  # avoid printing pKAI output
+    pks = pKAI(pdb_file)
+    sys.stdout = sys.__stdout__
+    df = pd.DataFrame(pks, columns=[COL_PDB_CHAIN_ID, COL_POS, COL_RES, COL_PKA])
+    df = df[df[COL_RES].str.contains(STR_LYS)]
+    df[COL_PDB_FILE] = base_name
+
+    if df_offsets is not None:
+        df[COL_POS] = df.apply(
+            lambda x: x[COL_POS] + get_pdb_fasta_offset(base_name, df_offsets,
+                                                                          x[COL_PDB_CHAIN_ID]),
+            axis=1)
+    return df.reset_index(drop=True)
+
+
+def get_sasa_df(pdb_file, df_offsets=None) -> pd.DataFrame:
+    base_name = os.path.basename(pdb_file)
+    list_sasa = []
+    p = PDBParser(QUIET=1)
+    struct = p.get_structure("pdb", pdb_file)
+    sr = ShrakeRupley()
+    sr.compute(struct, level="R")  # compute SASA on residue level
+    for chain in struct.get_chains():
+        for res in chain.get_residues():
+            if res.get_resname() == 'LYS':  # pre-filter for lys residues
+                list_sasa.append((chain.get_id(), res.get_id()[1], res.get_resname(), res.sasa))
+    df = pd.DataFrame(list_sasa, columns=[COL_PDB_CHAIN_ID, COL_POS, COL_RES, COL_SASA])
+    df[COL_PDB_FILE] = base_name
+
+    if df_offsets is not None:
+        df[COL_POS] = df.apply(
+            lambda x: x[COL_POS] + get_pdb_fasta_offset(base_name, df_offsets,
+                                                                          x[COL_PDB_CHAIN_ID]),
+            axis=1)
+    return df.reset_index(drop=True)
+

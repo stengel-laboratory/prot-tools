@@ -2,7 +2,7 @@
 
 import pandas as pd
 import argparse
-import prot_lib
+from prot_tools import prot_lib
 
 desc = """Kai Kammer - 2019-09. 
 Script to convert jwalk output to uxid. 

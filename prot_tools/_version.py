@@ -52,7 +52,7 @@ def get_config() -> VersioneerConfig:
     cfg.VCS = "git"
     cfg.style = "pep440"
     cfg.tag_prefix = ""
-    cfg.parentdir_prefix = "xlink_kme_sbml-"
+    cfg.parentdir_prefix = "prot_tools-"
     cfg.versionfile_source = "prot_tools/_version.py"
     cfg.verbose = False
     return cfg
