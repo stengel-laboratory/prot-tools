@@ -1,0 +1,23 @@
+# This CITATION.cff file was generated with cffinit.
+# Visit https://bit.ly/cffinit to generate yours today!
+
+cff-version: 1.2.0
+title: PROT TOOLS - create input for kinetic crosslinks simulations
+message: >-
+  If you use this software, please cite it using the
+  metadata from this file.
+type: software
+authors:
+  - given-names: Kai-Michael
+    family-names: Kammer
+    email: kai-michael.kammer@uni-konstanz.de
+    affiliation: Universität Konstanz
+    orcid: 'https://orcid.org/0009-0006-9122-0480'
+repository-code: 'https://github.com/stengel-laboratory/prot-tools'
+abstract: A collection of scripts to create data with lysine pKa, accessibility and distance within a given structure
+keywords:
+  - cross-linking
+  - chemical kinetics
+license: GPL-3.0
+commit: c43199bddb3ddfff983dcfe2d5c0fe0f7d291e6d
+date-released: '2023-09-15'
