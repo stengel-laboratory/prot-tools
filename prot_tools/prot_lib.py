@@ -46,6 +46,14 @@ STR_LYS = "LYS"
 
 
 def get_pdb_fasta_offset(pdb_file, df_offset, pdb_chain_id=None):
+    required_columns = {COL_PDB_FILE, COL_PDB_CHAIN_ID, COL_OFFSET}
+    missing_columns = required_columns.difference(df_offset.columns)
+    if missing_columns:
+        print(
+            f"Warning: required offset columns are missing: {', '.join(sorted(missing_columns))}\n"
+            "Assuming offset of 0"
+        )
+        return 0
     if not pdb_chain_id:
         chains = df_offset.loc[
             df_offset[COL_PDB_FILE] == pdb_file, COL_PDB_CHAIN_ID
@@ -57,27 +65,18 @@ def get_pdb_fasta_offset(pdb_file, df_offset, pdb_chain_id=None):
         print(
             f"No chain id given for pdb fasta offset; using first chain: {pdb_chain_id}"
         )
-    if COL_PDB_FILE in df_offset and COL_PDB_CHAIN_ID in df_offset.columns:
-        if (
-            pdb_file in df_offset[COL_PDB_FILE].values
-            and pdb_chain_id in df_offset[COL_PDB_CHAIN_ID].values
-        ):
-            return df_offset[
-                (df_offset[COL_PDB_FILE] == pdb_file)
-                & (df_offset[COL_PDB_CHAIN_ID] == pdb_chain_id)
-            ][COL_OFFSET].values[0]
-        else:
-            print(
-                f"Warning: pdb file {pdb_file} or pdb chain {pdb_chain_id} not found in offsets file\n"
-                f"Assuming offset of 0"
-            )
-            return 0
-    else:
+    matches = df_offset.loc[
+        (df_offset[COL_PDB_FILE] == pdb_file)
+        & (df_offset[COL_PDB_CHAIN_ID] == pdb_chain_id),
+        COL_OFFSET,
+    ]
+    if matches.empty:
         print(
-            f"Warning: column {COL_PDB_FILE} or {COL_PDB_CHAIN_ID} not found in offsets file\n"
+            f"Warning: pdb file {pdb_file} or pdb chain {pdb_chain_id} not found in offsets file\n"
             f"Assuming offset of 0"
         )
         return 0
+    return matches.iloc[0]
 
 
 def is_pdb_file(file_path) -> "bool":
@@ -215,7 +214,9 @@ def get_pdb_mol_weight(pdb_file):
 def get_pka_df(pdb_file, df_offsets=None) -> "pd.DataFrame":
     base_name = os.path.basename(pdb_file)
     if pKAI is None:
-        raise ImportError("pKAI is required to calculate pKa values")
+        raise ImportError(
+            "pKAI is required to calculate pKa values. Install it with 'pip install pkai'."
+        )
     original_stdout = sys.stdout
     with open(os.devnull, "w") as devnull:
         try:
