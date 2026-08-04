@@ -59,7 +59,9 @@ def get_pdb_fasta_offset(pdb_file, df_offset, pdb_chain_id=None):
             df_offset[COL_PDB_FILE] == pdb_file, COL_PDB_CHAIN_ID
         ].dropna()
         if chains.empty:
-            print(f"Warning: pdb file {pdb_file} not found in offsets file\nAssuming offset of 0")
+            print(
+                f"Warning: pdb file {pdb_file} not found in offsets file\nAssuming offset of 0"
+            )
             return 0
         pdb_chain_id = chains.iloc[0]
         print(
