@@ -4,7 +4,7 @@ from Bio.PDB.SASA import ShrakeRupley
 
 try:
     from pKAI.pKAI import pKAI
-except ModuleNotFoundError:
+except ImportError:
     pKAI = None
 
 from Bio.PDB import PDBParser
@@ -47,6 +47,13 @@ STR_LYS = "LYS"
 
 def get_pdb_fasta_offset(pdb_file, df_offset, pdb_chain_id=None):
     if not pdb_chain_id:
+        chains = df_offset.loc[
+            df_offset[COL_PDB_FILE] == pdb_file, COL_PDB_CHAIN_ID
+        ].dropna()
+        if chains.empty:
+            print(f"Warning: pdb file {pdb_file} not found in offsets file\nAssuming offset of 0")
+            return 0
+        pdb_chain_id = chains.iloc[0]
         print(
             f"No chain id given for pdb fasta offset; using first chain: {pdb_chain_id}"
         )
@@ -209,9 +216,13 @@ def get_pka_df(pdb_file, df_offsets=None) -> "pd.DataFrame":
     base_name = os.path.basename(pdb_file)
     if pKAI is None:
         raise ImportError("pKAI is required to calculate pKa values")
-    sys.stdout = open(os.devnull, "w")  # avoid printing pKAI output
-    pks = pKAI(pdb_file)
-    sys.stdout = sys.__stdout__
+    original_stdout = sys.stdout
+    with open(os.devnull, "w") as devnull:
+        try:
+            sys.stdout = devnull  # avoid printing pKAI output
+            pks = pKAI(pdb_file)
+        finally:
+            sys.stdout = original_stdout
     df = pd.DataFrame(pks, columns=[COL_PDB_CHAIN_ID, COL_POS, COL_RES, COL_PKA])
     df = df[df[COL_RES].str.contains(STR_LYS)]
     df[COL_PDB_FILE] = base_name
